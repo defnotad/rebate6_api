@@ -17,15 +17,35 @@ admin.initializeApp({
 const db = admin.firestore();
 
 const usersDB = db.collection('users');
+const onlineDB = db.collection('online_stores');
 
 
 app.listen(3000, () => {
     console.log("Server started");
-    getUsers();
 });
 
-//Functions
-async function getUsers() {
-    const users = await usersDB.get();
-    users.forEach(user => console.log(user.data()['points']));
-}
+
+//Requests
+app.get('/user', async function (req, res) {
+    const phone = req.query.phone;
+    const merchantID = 'Btg9U5yCb1b3dQpqNaEC';
+    await onlineDB.doc(merchantID).get().then(async (merchant) => {
+        if (merchant.exists) {
+            await admin.auth().getUserByPhoneNumber('+91' + phone).then(async function (user) {
+                await usersDB.doc(user.uid).get().then((details) => {
+                    const points = details.data()['points'];
+                    res.send(points.toString());
+                });
+            }).catch(() => {
+                res.send("Sorry");
+            });
+        } else {
+            res.send("Invalid source");
+        }
+    });
+});
+
+app.post('/user', async function (req, res) {
+    const phone = req.query.phone;
+    // await 
+});
